@@ -1,40 +1,111 @@
-# .streamlit/secrets.toml
-OPENAI_API_KEY = "YOUR_API_KEY"
-
+import os
+from time import sleep
+import requests
 import streamlit as st
 from openai import OpenAI
+from deepgram import DeepgramClient, FileSource, PrerecordedOptions
+
+def make_request(url, headers, method="GET", data=None, files=None):
+    if method == "POST":
+        response = requests.post(url, headers=headers, json=data, files=files)
+    else:
+        response = requests.get(url, headers=headers)
+    return response.json()
+def Gladia(uploaded_file):
 
 
-st.title("Whisper Endpoint")
+    headers = {
+    "x-gladia-key": os.getenv("GLADIA_API_KEY", ""),  # Replace with your Gladia Token
+    "accept": "application/json",
+    }
 
+    files = {
+        "audio": (uploaded_file.name, uploaded_file, uploaded_file.type)
+    }
+    print("- Uploading file to Gladia...")
+    upload_response = make_request(
+    "https://api.gladia.io/v2/upload/", headers, "POST", files=files
+    )
+    print("Upload response with File ID:", upload_response)
+    audio_url = upload_response.get("audio_url")
+
+    data = {
+    "audio_url": audio_url,
+    "diarization": True,
+    }
+# You can also send an URL directly without uploading it. Make sure it's the direct link and publicly accessible.
+# For any parameters, please see: https://docs.gladia.io/api-reference/pre-recorded-flow
+
+    headers["Content-Type"] = "application/json"
+
+    print("- Sending request to Gladia API...")
+    post_response = make_request(
+    "https://api.gladia.io/v2/transcription/", headers, "POST", data=data
+    )
+
+    print("Post response with Transcription ID:", post_response)
+    result_url = post_response.get("result_url")
+
+    if result_url:
+     print("True")
+     while True:
+        poll_response = make_request(result_url, headers)
+        if poll_response.get("status") == "done":
+            reply = poll_response.get("result")
+            break
+        elif poll_response.get("status") == "error":
+            reply = poll_response.get("error")
+        else:
+            reply = poll_response.get("status")
+        sleep(1)
+    return reply
+def Deepgram(uploaded_file):
+   deepgram = DeepgramClient()
+    # STEP 2 Call the transcribe_file method on the rest class
+   processed = uploaded_file.getvalue()
+   payload = {"buffer": processed, "mimetype": "audio/webm"}
+    
+   options = PrerecordedOptions(
+        model = "nova-2"
+   )
+   file_response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
+   return file_response['results']['channels'][0]['alternatives'][0]['transcript']
+
+
+st.title("AI Endpoint")
+
+model = st.selectbox("Select Model", ["Whisper", "Assembly", "Gladia","Deepgram"], 
+             key="model",index=None,
+    placeholder="Select model..",)
 # Set Model
-if "openai_model" not in st.session_state:
-    st.session_state["openai_model"] = "whisper-1"
-client = OpenAI(api_key = st.secrets(OPENAI_API_KEY))
+client = OpenAI(api_key = st.secrets["OPENAI_API_KEY"])
 
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages from history on app rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+
 
 # Accept user input
-if prompt := st.chat_input("Insert Recording",accept_file=True,file_type="webm"):
+uploaded_file = st.file_uploader("Insert Recording", type="webm")
+if uploaded_file is not None:
     # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": uploaded_file})
     # Display user message in chat message container
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown("File Inserted")
 
-with st.chat_message("assistant"):
-    transcription = client.audio.transcriptions.create(
-    model="whisper-1", 
-    file= [{"role": m["role"], "content": m["content"]}
-           for m in st.session_state.messages],
-    transcription=True
-)
-response = st.write_stream(transcription.text)
-st.session_state.messages.append({"role": "assistant", "content": response})
+    # Transcribe the audio file
+    with st.chat_message("assistant"):
+       if(model=="Whisper") :
+            transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=uploaded_file,
+            )
+            response = transcription.text
+       elif (model=="Gladia"):
+            response = Gladia(uploaded_file)
+       elif (model=="Deepgram"):
+            response = Deepgram(uploaded_file)
+       st.write(response)
+       st.session_state.messages.append({"role": "assistant", "content": response})
