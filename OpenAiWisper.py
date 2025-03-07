@@ -100,7 +100,7 @@ st.title("Transcription Testing")
 
 model = st.selectbox("Select Model", ["Assembly", "Deepgram", "Gladia","Whisper"], 
              key="model",index=None,
-    placeholder="Select model..",)
+    placeholder="Select model..",help="Select the model to use for transcription")
 # Set Model
 client = OpenAI(api_key = st.secrets["OPENAI_API_KEY"])
 
