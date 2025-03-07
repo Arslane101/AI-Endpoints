@@ -98,9 +98,9 @@ def AssemblyAI(uploaded_file):
 
 st.title("Transcription Testing")
 
-model = st.selectbox("Select Model", ["Assembly", "Deepgram", "Gladia","Whisper"], 
+model = st.selectbox("Select the model to use for transcription", ["Assembly", "Deepgram", "Gladia","Whisper"], 
              key="model",index=None,
-    placeholder="Select model..",help="Select the model to use for transcription")
+    placeholder="eg : Whisper")
 # Set Model
 client = OpenAI(api_key = st.secrets["OPENAI_API_KEY"])
 
