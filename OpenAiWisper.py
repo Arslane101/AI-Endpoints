@@ -33,11 +33,7 @@ def Gladia(uploaded_file):
     audio_url = upload_response.get("audio_url")
 
     data = {
-    "audio_url": audio_url,
-    "diarization": True,
-    }
-# You can also send an URL directly without uploading it. Make sure it's the direct link and publicly accessible.
-# For any parameters, please see: https://docs.gladia.io/api-reference/pre-recorded-flow
+    "audio_url": audio_url }
 
     headers["Content-Type"] = "application/json"
 
@@ -54,13 +50,13 @@ def Gladia(uploaded_file):
      while True:
         poll_response = make_request(result_url, headers)
         if poll_response.get("status") == "done":
+            print(poll_response.get("status"))
             reply = poll_response.get("result")
             break
         elif poll_response.get("status") == "error":
             reply = poll_response.get("error")
         else:
             reply = poll_response.get("status")
-        sleep(1)
     return reply
 @st.cache_data
 def Deepgram(uploaded_file,input):
@@ -102,7 +98,7 @@ model = st.selectbox("Select the service to use for transcription", ["Assembly",
              key="model",index=None,
     placeholder="eg : Whisper")
 if(model=="Deepgram"):
-    input = st.text_input("Type the name of the model you want to use : ",placeholder="eg : nova-2")
+    input = st.text_input("Type the name of the model you want to use : ",value="nova-2",placeholder="eg : nova-2")
 # Set Model
 client = OpenAI(api_key = st.secrets["OPENAI_API_KEY"])
 
