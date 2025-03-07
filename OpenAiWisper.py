@@ -1,21 +1,24 @@
-import os
+from io import StringIO
 from time import sleep
+import assemblyai as aai
+
 import requests
 import streamlit as st
 from openai import OpenAI
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
-
+@st.cache_data
 def make_request(url, headers, method="GET", data=None, files=None):
     if method == "POST":
         response = requests.post(url, headers=headers, json=data, files=files)
     else:
         response = requests.get(url, headers=headers)
     return response.json()
+@st.cache_data
 def Gladia(uploaded_file):
 
-
+    
     headers = {
-    "x-gladia-key": os.getenv("GLADIA_API_KEY", ""),  # Replace with your Gladia Token
+    "x-gladia-key": st.secrets["GLADIA_API_KEY"],  # Replace with your Gladia Token
     "accept": "application/json",
     }
 
@@ -59,22 +62,43 @@ def Gladia(uploaded_file):
             reply = poll_response.get("status")
         sleep(1)
     return reply
+@st.cache_data
 def Deepgram(uploaded_file):
-   deepgram = DeepgramClient()
-    # STEP 2 Call the transcribe_file method on the rest class
-   processed = uploaded_file.getvalue()
-   payload = {"buffer": processed, "mimetype": "audio/webm"}
+   deepgram = DeepgramClient(st.secrets["secret"])  
+   # STEP 2 Call the transcribe_file method on the rest class
+ 
+   payload: FileSource = {
+            "buffer": uploaded_file,
+            "mimetype": "video/webm"
+        }
     
    options = PrerecordedOptions(
+        detect_language=True,
         model = "nova-2"
    )
-   file_response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
+   file_response = deepgram.listen.rest.v("1").transcribe_file(payload, options,timeout = 300)
    return file_response['results']['channels'][0]['alternatives'][0]['transcript']
+@st.cache_data
+def AssemblyAI(uploaded_file):
 
+    aai.settings.api_key = st.secrets["ASSEMBLY_API_KEY"]
+    transcriber = aai.Transcriber()
 
-st.title("AI Endpoint")
+    audio_file = uploaded_file.getvalue()
 
-model = st.selectbox("Select Model", ["Whisper", "Assembly", "Gladia","Deepgram"], 
+    config = aai.TranscriptionConfig(language_detection=True)
+
+    transcript = transcriber.transcribe(audio_file, config)
+
+    if transcript.status == aai.TranscriptStatus.error:
+        print(f"Transcription failed: {transcript.error}")
+        exit(1)
+
+    return transcript.text
+
+st.title("Transcription Testing")
+
+model = st.selectbox("Select Model", ["Assembly", "Deepgram", "Gladia","Whisper"], 
              key="model",index=None,
     placeholder="Select model..",)
 # Set Model
@@ -93,7 +117,7 @@ if uploaded_file is not None:
     st.session_state.messages.append({"role": "user", "content": uploaded_file})
     # Display user message in chat message container
     with st.chat_message("user"):
-        st.markdown("File Inserted")
+        st.markdown( uploaded_file.name + "\tInserted")
 
     # Transcribe the audio file
     with st.chat_message("assistant"):
@@ -107,5 +131,7 @@ if uploaded_file is not None:
             response = Gladia(uploaded_file)
        elif (model=="Deepgram"):
             response = Deepgram(uploaded_file)
+       else:
+           response = AssemblyAI(uploaded_file)
        st.write(response)
        st.session_state.messages.append({"role": "assistant", "content": response})
