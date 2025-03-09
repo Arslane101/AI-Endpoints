@@ -6,7 +6,6 @@ import requests
 import streamlit as st
 from openai import OpenAI
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
-@st.cache_data
 def make_request(url, headers, method="GET", data=None, files=None):
     if method == "POST":
         response = requests.post(url, headers=headers, json=data, files=files)
@@ -46,18 +45,18 @@ def Gladia(uploaded_file):
     result_url = post_response.get("result_url")
 
     if result_url:
-     print("True")
      while True:
         poll_response = make_request(result_url, headers)
         if poll_response.get("status") == "done":
-            print(poll_response.get("status"))
             reply = poll_response.get("result")
             break
         elif poll_response.get("status") == "error":
             reply = poll_response.get("error")
         else:
             reply = poll_response.get("status")
-    return reply
+        sleep(1)
+    
+    return reply["transcription"]["full_transcript"]
 @st.cache_data
 def Deepgram(uploaded_file,input):
    deepgram = DeepgramClient(st.secrets["secret"])  
@@ -75,7 +74,7 @@ def Deepgram(uploaded_file,input):
    file_response = deepgram.listen.rest.v("1").transcribe_file(payload, options,timeout = 300)
    return file_response['results']['channels'][0]['alternatives'][0]['transcript']
 @st.cache_data
-def AssemblyAI(uploaded_file):
+def Assembly(uploaded_file):
 
     aai.settings.api_key = st.secrets["ASSEMBLY_API_KEY"]
     transcriber = aai.Transcriber()
@@ -91,9 +90,15 @@ def AssemblyAI(uploaded_file):
         exit(1)
 
     return transcript.text
+@st.cache_data
+def Whisper(uploaded_file):
+    transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=uploaded_file,
+            )
+    return transcription.text
 
 st.title("Transcription Testing")
-
 model = st.selectbox("Select the service to use for transcription", ["Assembly", "Deepgram", "Gladia","Whisper"], 
              key="model",index=None,
     placeholder="eg : Whisper")
@@ -116,21 +121,11 @@ if uploaded_file is not None:
     # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown("File Uploaded with Success ! ")
-
     # Transcribe the audio file
     with st.chat_message("assistant"):
-       if(model=="Whisper") :
-            transcription = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=uploaded_file,
-            )
-            response = transcription.text
-       elif (model=="Gladia"):
-            response = Gladia(uploaded_file)
-       elif (model=="Deepgram"):
-            
+       if (model=="Deepgram"):
             response = Deepgram(uploaded_file,input)
        else:
-           response = AssemblyAI(uploaded_file)
+           response = eval(model)(uploaded_file)
        st.write(response)
        st.session_state.messages.append({"role": "assistant", "content": response})
