@@ -1,6 +1,6 @@
 from io import BytesIO
 from time import sleep
-import urllib.request
+from groq import Groq as GROQ
 import assemblyai as aai
 import requests
 import streamlit as st
@@ -113,6 +113,14 @@ def Whisper(uploaded_file):
             )
     return transcription.text
 
+@st.cache_data
+def Groq(uploaded_file):
+    client = GROQ(api_key= st.secrets["GROQ"])
+    chat_completion = client.audio.transcriptions.create(
+        file=uploaded_file,
+        model="whisper-large-v3-turbo")
+    return chat_completion.text
+        
 
 st.title("Transcription Testing")
 
@@ -130,7 +138,7 @@ if toggle:
     uploaded_file = st.file_uploader("Insert Recording", type="webm")
 else: 
     uploaded_file = st.text_input("Insert Link",placeholder="eg: https://www.example.com/recording.webm")
-model = st.selectbox("Select the service to use for transcription", ["Assembly", "Deepgram", "Gladia","Whisper"],
+model = st.selectbox("Select the service to use for transcription", ["Assembly", "Deepgram", "Gladia","Groq","Whisper"],
     placeholder="eg : Whisper",index=None)
 if(model=="Deepgram"):
     input = st.text_input("Type the name of the model you want to use : ",value="nova-2",placeholder="eg : nova-2")
@@ -143,7 +151,7 @@ if(uploaded_file is not None):
      with st.chat_message("user"):
         st.markdown("Link Successfully Added ! ")
  with st.chat_message("assistant"):
-     if (model=="Deepgram"):
+     if (model=="Deepgram" ):
             response = Deepgram(uploaded_file,input)
      else:
            if(model is not None):
