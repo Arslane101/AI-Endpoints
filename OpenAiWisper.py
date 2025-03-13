@@ -133,11 +133,11 @@ if "messages" not in st.session_state:
 
 # Accept user input
 toggle = st.toggle(label="📁")
-response = "No response yet"
+response = " "
 if toggle:
     uploaded_file = st.file_uploader("Insert Recording", type="webm")
 else: 
-    uploaded_file = st.text_input("Insert Link",placeholder="eg: https://www.example.com/recording.webm")
+    uploaded_file = st.text_input("Insert Link",placeholder="eg: https://www.example.com/recording.webm",value=None)
 model = st.selectbox("Select the service to use for transcription", ["Assembly", "Deepgram", "Gladia","Groq","Whisper"],
     placeholder="eg : Whisper",index=None)
 if(model=="Deepgram"):
