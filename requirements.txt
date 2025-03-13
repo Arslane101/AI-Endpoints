@@ -10,6 +10,7 @@ assemblyai==0.37.0
 attrs== 25.1.0
 blinker==1.9.0
 deepgram-sdk==3.10.1
+groq==0.18.0
 httpx==0.28.1
 openai== 1.65.4
 pip==24.0
