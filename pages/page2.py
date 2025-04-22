@@ -190,10 +190,5 @@ with prompt_window:
                                 if st.button("No", key="cancel_clear", type="secondary", use_container_width=True):
                                     st.session_state.show_clear = False
                                     st.rerun()
-                        
-                        # Use prompt button
-                        if not any([st.session_state.show_edit, st.session_state.show_delete, st.session_state.show_clear]):
-                            if st.button("Use Prompt", key="use_prompt", type="primary", use_container_width=True):
-                                return prompt["content"]
         else:
             st.info("No prompts available")
