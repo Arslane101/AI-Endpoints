@@ -1,9 +1,9 @@
 [[pages]]
-path = "pages/page1.py"
+path = "views/page1.py"
 name = "Home"
 icon = "🏠"
 
 [[pages]]
-path = "pages/page2.py"
+path = "views/page2.py"
 name = "Prompt_Library"
 icon = "📚"
