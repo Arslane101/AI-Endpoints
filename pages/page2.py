@@ -2,7 +2,7 @@ import json
 import os
 import streamlit as st
 from typing import Dict, List, Optional
-
+global library, prompts
 # Global variables
 library = None
 prompts = None
@@ -69,7 +69,6 @@ def initialize_globals():
         prompts = library.list_prompts()
 
 """Creates a minimalistic window for the prompt library."""
-global library, prompts
     
 initialize_globals()
 prompt_window = st.sidebar.container()
