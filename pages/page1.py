@@ -5,7 +5,6 @@ import google.generativeai as genai
 from groq import Groq as GROQ
 import assemblyai as aai
 import requests
-import prompt_library
 import streamlit as st
 from openai import OpenAI
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
