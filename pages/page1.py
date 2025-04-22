@@ -9,7 +9,7 @@ import streamlit as st
 from openai import OpenAI
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
 from together import Together
-from pages.page2 import library,prompts
+from page2 import library,prompts
 
 @st.cache_data
 def score_prd(prd_text):
