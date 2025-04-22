@@ -10,13 +10,13 @@ assemblyai==0.37.0
 attrs==25.1.0
 blinker==1.9.0
 deepgram-sdk==3.10.1
-google-generativeai==0.3.2
+google-generativeai
 groq==0.18.0
 huggingface_hub==0.21.4
 httpx==0.28.1
 openai==1.65.4
 pip==24.0
-protobuf==5.29.3
+protobuf
 pydantic==2.10.6
 pydantic_core==2.27.2
 pydeck==0.9.1
