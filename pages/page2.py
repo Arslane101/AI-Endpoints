@@ -68,13 +68,12 @@ def initialize_globals():
     if prompts is None:
         prompts = library.list_prompts()
 
-def create_prompt_window():
-    """Creates a minimalistic window for the prompt library."""
-    global library, prompts
+"""Creates a minimalistic window for the prompt library."""
+global library, prompts
     
-    initialize_globals()
-    prompt_window = st.sidebar.container()
-    with prompt_window:
+initialize_globals()
+prompt_window = st.sidebar.container()
+with prompt_window:
         # Initialize prompt library and states
         if 'show_add' not in st.session_state:
             st.session_state.show_add = False
@@ -199,5 +198,3 @@ def create_prompt_window():
                                 return prompt["content"]
         else:
             st.info("No prompts available")
-
-    return None
