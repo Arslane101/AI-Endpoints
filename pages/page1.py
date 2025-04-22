@@ -11,7 +11,6 @@ from deepgram import DeepgramClient, FileSource, PrerecordedOptions
 from together import Together
 from .page2 import library,prompts
 
-
 @st.cache_data
 def score_prd(prd_text):
     """Score PRD based on key metrics with simplified scoring."""
