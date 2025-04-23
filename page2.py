@@ -71,29 +71,27 @@ def initialize_globals():
 """Creates a minimalistic window for the prompt library."""
     
 initialize_globals()
-prompt_window = st.sidebar.container()
-with prompt_window:
         # Initialize prompt library and states
-        if 'show_add' not in st.session_state:
+if 'show_add' not in st.session_state:
             st.session_state.show_add = False
-        if 'show_edit' not in st.session_state:
+if 'show_edit' not in st.session_state:
             st.session_state.show_edit = False
-        if 'show_delete' not in st.session_state:
+if 'show_delete' not in st.session_state:
             st.session_state.show_delete = False
-        if 'show_clear' not in st.session_state:
+if 'show_clear' not in st.session_state:
             st.session_state.show_clear = False
         
         # Header with Add button
-        col1, col2 = st.columns([3, 1])
-        with col1:
+col1, col2 = st.columns([3, 1])
+with col1:
             st.subheader("📚 Prompts")
-        with col2:
-            if st.button("➕", help="Add new prompt", use_container_width=True):
+with col2:
+    if st.button("➕", help="Add new prompt", use_container_width=True):
                 st.session_state.show_add = not st.session_state.show_add
                 st.session_state.show_edit = False
         
         # Add new prompt
-        if st.session_state.show_add:
+    if st.session_state.show_add:
             with st.container():
                 name = st.text_input("Name", key="new_prompt_name")
                 content = st.text_area("Content", height=100, key="new_prompt_content")
@@ -111,7 +109,7 @@ with prompt_window:
                             st.error("❌")
         
         # List and manage prompts
-        if prompts:
+    if prompts:
             st.divider()
             with st.container():
                 num_prompts = len(prompts)
@@ -190,5 +188,5 @@ with prompt_window:
                                 if st.button("No", key="cancel_clear", type="secondary", use_container_width=True):
                                     st.session_state.show_clear = False
                                     st.rerun()
-        else:
+    else:
             st.info("No prompts available")
