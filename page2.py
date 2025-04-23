@@ -82,9 +82,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Title and description
-st.title("📚 Prompt_Library")
 st.write("Creates a minimalistic window for the prompt library.")
-
 # Prompts section with modern styling
 st.subheader("📝 Prompts")
 
