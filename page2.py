@@ -194,29 +194,29 @@ with main_content:
 
                         if st.session_state.show_delete:
                             st.warning("Delete this prompt?")
-                            col1, col2 = st.columns([1,1])
+                            col1, col2 = st.columns(2)  # Equal width columns
                             with col1:
-                                if st.button("Yes", key="confirm_delete", type="primary"):
+                                if st.button("Yes", key="confirm_delete", type="primary", use_container_width=True):
                                     library.delete_prompt(selected_prompt)
                                     st.session_state.show_delete = False
                                     st.success("✅ Prompt deleted")
                                     st.rerun()
                             with col2:
-                                if st.button("No", key="cancel_delete"):
+                                if st.button("No", key="cancel_delete", use_container_width=True):
                                     st.session_state.show_delete = False
                                     st.rerun()
 
                         if st.session_state.show_clear:
                             st.warning("Clear all prompts?")
-                            col1, col2 = st.columns([1,1])
+                            col1, col2 = st.columns(2)  # Equal width columns
                             with col1:
-                                if st.button("Yes", key="confirm_clear", type="primary"):
+                                if st.button("Yes", key="confirm_clear", type="primary", use_container_width=True):
                                     library.clear_all_prompts()
                                     st.session_state.show_clear = False
                                     st.success("✅ All prompts cleared")
                                     st.rerun()
                             with col2:
-                                if st.button("No", key="cancel_clear"):
+                                if st.button("No", key="cancel_clear", use_container_width=True):
                                     st.session_state.show_clear = False
                                     st.rerun()
         else:
