@@ -5,5 +5,5 @@ icon = "🏠"
 
 [[pages]]
 path = "page2.py"
-name = "Prompt_Library"
+name = "Prompt Library"
 icon = "📚"
