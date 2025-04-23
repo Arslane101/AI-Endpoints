@@ -2,6 +2,17 @@ import json
 import os
 import streamlit as st
 from typing import Dict, List, Optional
+
+# Initialize session state
+if 'show_add' not in st.session_state:
+    st.session_state.show_add = False
+if 'show_edit' not in st.session_state:
+    st.session_state.show_edit = False
+if 'show_delete' not in st.session_state:
+    st.session_state.show_delete = False
+if 'show_clear' not in st.session_state:
+    st.session_state.show_clear = False
+
 global library, prompts
 # Global variables
 library = None
@@ -83,157 +94,130 @@ st.markdown("""
 
 # Title and description
 st.write("Creates a minimalistic window for the prompt library.")
-# Prompts section with modern styling
-st.subheader("📝 Prompts")
 
-# Add button in the top right
-col1, col2 = st.columns([6, 1])
-with col2:
-    if st.button("➕", help="Add new prompt", use_container_width=True):
-        st.session_state.show_add = not st.session_state.show_add
-        st.session_state.show_edit = False
+# Main content area
+main_content = st.container()
 
-# Prompt management section
-if prompts:
-    st.markdown("### Available Prompts ({})".format(len(prompts)))
-    
-    # Prompt selection with modern styling and proper label
-    prompt_options = [p["name"] for p in prompts]
-    selected_prompt = st.selectbox(
-        "Select a prompt",  # Added proper label
-        options=prompt_options,
-        key="select_prompt",
-        format_func=lambda x: f"📄 {x}",
-        label_visibility="collapsed"  # Hide label while maintaining accessibility
-    )
-    
-    if selected_prompt:
-        prompt = library.get_prompt(selected_prompt)
-        if prompt:
-            # Action buttons in a horizontal row
-            col1, col2, col3 = st.columns([1,1,1])
+with main_content:
+    if st.session_state.show_add:
+        # Add new prompt form
+        with st.form("new_prompt_form"):
+            st.subheader("Add New Prompt")
+            name = st.text_input("Name", key="new_prompt_name")
+            content = st.text_area("Content", height=150, key="new_prompt_content")
+            description = st.text_input("Description (optional)", key="new_prompt_desc")
+            
+            col1, col2 = st.columns([1, 1])
             with col1:
-                if st.button("✏️ Edit", key="edit_btn", help="Edit prompt"):
-                    st.session_state.show_edit = True  # Fixed edit state
+                submit = st.form_submit_button("Save", type="primary")
+                if submit and name and content:
+                    library.add_prompt(name, content, description)
                     st.session_state.show_add = False
+                    st.success("✅ Prompt saved")
+                    st.rerun()
             with col2:
-                if st.button("🗑️ Delete", key="delete_btn", help="Delete prompt"):
-                    st.session_state.show_delete = True  # Fixed delete state
-            with col3:
-                if st.button("♻️ Clear All", key="clear_btn", help="Clear all prompts"):
-                    st.session_state.show_clear = True  # Fixed clear state
-            
-            # Edit form
-            if st.session_state.get('show_edit', False):
-                with st.form("edit_form"):
-                    new_content = st.text_area(
-                        "Edit Content",
-                        value=prompt["content"],
-                        height=200
-                    )
-                    new_description = st.text_input(
-                        "Edit Description",
-                        value=prompt.get("description", "")
-                    )
-                    col1, col2 = st.columns([1, 1])
-                    with col1:
-                        if st.form_submit_button("Save Changes", type="primary"):
-                            library.delete_prompt(selected_prompt)
-                            library.add_prompt(selected_prompt, new_content, new_description)
-                            st.session_state.show_edit = False
-                            st.success("✅ Changes saved")
-                            st.rerun()
-                    with col2:
-                        if st.form_submit_button("Cancel"):
-                            st.session_state.show_edit = False
-                            st.rerun()
-            else:
-                # Prompt content display with proper label
-                st.text_area(
-                    "Prompt Content",
-                    value=prompt["content"],
-                    height=200,
-                    disabled=True,
-                    label_visibility="collapsed"
-                )
-
-            # Confirmation dialogs
-            if st.session_state.show_delete:
-                st.warning("Delete this prompt?")
-                col1, col2 = st.columns([1,1])
-                with col1:
-                    if st.button("Yes", key="confirm_delete", type="primary"):
-                        library.delete_prompt(selected_prompt)
-                        st.session_state.show_delete = False
-                        st.success("✅ Prompt deleted")
-                        st.rerun()
-                with col2:
-                    if st.button("No", key="cancel_delete"):
-                        st.session_state.show_delete = False
-                        st.rerun()
-
-            if st.session_state.show_clear:
-                st.warning("Clear all prompts?")
-                col1, col2 = st.columns([1,1])
-                with col1:
-                    if st.button("Yes", key="confirm_clear", type="primary"):
-                        library.clear_all_prompts()
-                        st.session_state.show_clear = False
-                        st.success("✅ All prompts cleared")
-                        st.rerun()
-                with col2:
-                    if st.button("No", key="cancel_clear"):
-                        st.session_state.show_clear = False
-                        st.rerun()
-
-# Add new prompt form
-if st.session_state.show_add:
-    with st.form("new_prompt_form"):
-        st.subheader("Add New Prompt")
-        name = st.text_input("Name", key="new_prompt_name")
-        content = st.text_area("Content", height=150, key="new_prompt_content")
-        description = st.text_input("Description (optional)", key="new_prompt_desc")
-        
-        col1, col2 = st.columns([1, 1])
+                if st.form_submit_button("Cancel"):
+                    st.session_state.show_add = False
+                    st.rerun()
+    else:
+        # Prompts section with modern styling
+        col1, col2 = st.columns([6, 1])
         with col1:
-            submit = st.form_submit_button("Save", type="primary")
-            if submit and name and content:
-                library.add_prompt(name, content, description)
-                st.session_state.show_add = False
-                st.success("✅ Prompt saved")
-                st.rerun()
+            st.subheader("📝 Prompts")
         with col2:
-            if st.form_submit_button("Cancel"):
-                st.session_state.show_add = False
+            if st.button("➕", help="Add new prompt", use_container_width=True):
+                st.session_state.show_add = True
                 st.rerun()
 
-# Confirmation dialogs with proper spacing
-if st.session_state.show_delete:
-    st.warning("Delete this prompt?")
-    col1, col2 = st.columns([1,1])
-    with col1:
-        if st.button("Yes", key="confirm_delete", type="primary", use_container_width=True):
-            library.delete_prompt(selected_prompt)
-            st.session_state.show_delete = False
-            st.success("✅")
-            st.rerun()
-    with col2:
-        if st.button("No", key="cancel_delete", type="secondary", use_container_width=True):
-            st.session_state.show_delete = False
-            st.rerun()
+        # Prompt management section
+        if prompts:
+            prompt_options = [p["name"] for p in prompts]
+            selected_prompt = st.selectbox(
+                "Select a prompt",
+                options=prompt_options,
+                key="select_prompt",
+                format_func=lambda x: f"📄 {x}",
+                label_visibility="collapsed"
+            )
             
-    if st.session_state.show_clear:
-        st.warning("Clear all prompts?")
-        col1, col2 = st.columns([1,1])
-        with col1:
-            if st.button("Yes", key="confirm_clear", type="primary", use_container_width=True):
-                library.clear_all_prompts()
-                st.session_state.show_clear = False
-                st.success("✅")
-                st.rerun()
-        with col2:
-            if st.button("No", key="cancel_clear", type="secondary", use_container_width=True):
-                st.session_state.show_clear = False
-                st.rerun()
-else:
-    st.info("No prompts available")
+            if selected_prompt:
+                prompt = library.get_prompt(selected_prompt)
+                if prompt:
+                    if st.session_state.show_edit:
+                        # Edit form
+                        with st.form("edit_form"):
+                            st.subheader("Edit Prompt")
+                            new_content = st.text_area(
+                                "Content",
+                                value=prompt["content"],
+                                height=200
+                            )
+                            new_description = st.text_input(
+                                "Description",
+                                value=prompt.get("description", "")
+                            )
+                            col1, col2 = st.columns([1, 1])
+                            with col1:
+                                if st.form_submit_button("Save Changes", type="primary"):
+                                    library.delete_prompt(selected_prompt)
+                                    library.add_prompt(selected_prompt, new_content, new_description)
+                                    st.session_state.show_edit = False
+                                    st.success("✅ Changes saved")
+                                    st.rerun()
+                            with col2:
+                                if st.form_submit_button("Cancel"):
+                                    st.session_state.show_edit = False
+                                    st.rerun()
+                    else:
+                        # Display prompt and action buttons
+                        col1, col2, col3 = st.columns([1,1,1])
+                        with col1:
+                            if st.button("✏️ Edit", key="edit_btn", help="Edit prompt"):
+                                st.session_state.show_edit = True
+                                st.rerun()
+                        with col2:
+                            if st.button("🗑️ Delete", key="delete_btn", help="Delete prompt"):
+                                st.session_state.show_delete = True
+                                st.rerun()
+                        with col3:
+                            if st.button("♻️ Clear All", key="clear_btn", help="Clear all prompts"):
+                                st.session_state.show_clear = True
+                                st.rerun()
+
+                        st.text_area(
+                            "Prompt Content",
+                            value=prompt["content"],
+                            height=200,
+                            disabled=True,
+                            label_visibility="collapsed"
+                        )
+
+                        if st.session_state.show_delete:
+                            st.warning("Delete this prompt?")
+                            col1, col2 = st.columns([1,1])
+                            with col1:
+                                if st.button("Yes", key="confirm_delete", type="primary"):
+                                    library.delete_prompt(selected_prompt)
+                                    st.session_state.show_delete = False
+                                    st.success("✅ Prompt deleted")
+                                    st.rerun()
+                            with col2:
+                                if st.button("No", key="cancel_delete"):
+                                    st.session_state.show_delete = False
+                                    st.rerun()
+
+                        if st.session_state.show_clear:
+                            st.warning("Clear all prompts?")
+                            col1, col2 = st.columns([1,1])
+                            with col1:
+                                if st.button("Yes", key="confirm_clear", type="primary"):
+                                    library.clear_all_prompts()
+                                    st.session_state.show_clear = False
+                                    st.success("✅ All prompts cleared")
+                                    st.rerun()
+                            with col2:
+                                if st.button("No", key="cancel_clear"):
+                                    st.session_state.show_clear = False
+                                    st.rerun()
+        else:
+            st.info("No prompts available")
