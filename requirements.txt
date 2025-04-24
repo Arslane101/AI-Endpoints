@@ -29,3 +29,4 @@ st_pages
 langchain
 requests
 langchain-community
+langchain-openai

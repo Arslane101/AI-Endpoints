@@ -18,7 +18,7 @@ from langchain_community.callbacks import StreamlitCallbackHandler
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.runnables import RunnableConfig
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 @st.cache_data
 def score_prd(prd_text):
     """Score PRD based on key metrics with simplified scoring."""
@@ -51,7 +51,7 @@ def score_prd(prd_text):
     scores["Total Score"] = round(total_score, 2)
     
     return scores
-
+@st.cache_data
 def make_request(url, headers, method="GET", data=None, files=None):
     if method == "POST":
         response = requests.post(url, headers=headers, json=data, files=files)
@@ -163,14 +163,12 @@ def Groq(uploaded_file):
         model="whisper-large-v3-turbo")
     return chat_completion.text
         
-
 @st.cache_data
 def Gemini(transcript,prompt):
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('models/gemini-1.5-flash')
     response = model.generate_content(prompt["content"].format(transcript=transcript))
     return response.text
-
 @st.cache_data
 def TogetherAI(transcript,prompt):
     client = Together(api_key=st.secrets["TG_API_TOKEN"])
@@ -248,6 +246,9 @@ if response.strip() != " ":  # Only show if there's a transcript
                     response = analysis
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
+                msgs.add_ai_message(analysis)
+                st.session_state.messages.append({"role": "assistant", "content": analysis})
+                st.markdown("### PRD Analysis")           
                 scores = score_prd(analysis)
                 col1, col2 = st.columns([3, 1])
                 with col1:
@@ -272,25 +273,29 @@ if response.strip("") != " ":
                 st.write(step[0].log)
                 st.write(step[1])
         st.write(msg.content)
-    question = st.chat_input("Ask a question about the PRD:")
-    if question:
-     st.session_state.messages.append({"role": "user", "content": question})
-     st.chat_message("user").write(prompt)
-     llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=st.secrets["OPENAI_API_KEY"], streaming=True)
-     tools = [DuckDuckGoSearchRun(name="Search")]
-     chat_agent = ConversationalChatAgent.from_llm_and_tools(llm=llm, tools=tools)
-     executor = AgentExecutor.from_agent_and_tools(
-        agent=chat_agent,
-        tools=tools,
-        memory=memory,
-        return_intermediate_steps=True,
-        handle_parsing_errors=True,
-    )
-     with st.chat_message("assistant"):
-        st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-        cfg = RunnableConfig()
-        cfg["callbacks"] = [st_cb]
-        response = executor.invoke(prompt, cfg)
-        st.write(response["output"])
-        st.session_state.steps[str(len(msgs.messages) - 1)] = response["intermediate_steps"]
-    
+    if prompt := st.chat_input(placeholder="Ask a question about your document"):
+        st.chat_message("user").write(prompt)
+        llm = ChatGoogleGenerativeAI(
+        model="gemini-2.0-flash-001",
+        temperature=0,
+        max_tokens=None,
+        timeout=None,
+        max_retries=2,
+        api_key=st.secrets["GEMINI_API_KEY"])
+        tools = [DuckDuckGoSearchRun(name="Search")]
+        chat_agent = ConversationalChatAgent.from_llm_and_tools(llm=llm, tools=tools)
+        executor = AgentExecutor.from_agent_and_tools(
+            agent=chat_agent,
+            tools=tools,
+            memory=memory,
+            return_intermediate_steps=True,
+            handle_parsing_errors=True,
+        )
+        with st.chat_message("assistant"):
+            st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
+            cfg = RunnableConfig()
+            cfg["callbacks"] = [st_cb]
+            response = executor.invoke(prompt, cfg)
+            st.write(response["output"])
+            st.session_state.steps[str(len(msgs.messages) - 1)] = response["intermediate_steps"]
+        
