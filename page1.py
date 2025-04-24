@@ -244,7 +244,8 @@ if response.strip() != " ":  # Only show if there's a transcript
                 with st.chat_message("assistant"):
                     response = analysis
                 st.markdown(response)
-                msgs.add_ai_message(analysis)
+                memory.save_context({"input": response}, {"output": analysis})
+                st.session_state.messages.append({"role": "assistant", "content": analysis})
                 st.markdown("### PRD Analysis")           
                 scores = score_prd(analysis)
                 col1, col2 = st.columns([3, 1])
