@@ -187,7 +187,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if st.sidebar.button("Reset chat history"):
     st.session_state.messages = []
-
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+model = genai.GenerativeModel(model_name='gemini-1.5-flash')
 # Accept user input
 toggle = st.toggle(label="📁")
 response = " "
@@ -253,21 +254,17 @@ if response.strip() != " ":  # Only show if there's a transcript
                 for i, (metric, score) in enumerate(metrics):
                     with cols[i % 3]:
                         st.metric(metric, f"{score}/10", label_visibility="visible")
+                
 if prompt := st.chat_input("What is up?"):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
     # Display user message in chat message container
-    client = genai.client(api_key=st.secrets["GEMINI_API_KEY"])
     with st.chat_message("user"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
-        stream = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents = [
-                m["content"]
-                for m in st.session_state.messages
-            ],
-            stream=True,
+        stream = model.generate_content(
+            m["content"] for m in st.session_state.messages if m["role"] == 'user' 
         )
         response = st.write_stream(stream)
     st.session_state.messages.append({"role": "assistant", "content": response})
+    
