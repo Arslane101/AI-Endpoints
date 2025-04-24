@@ -268,7 +268,6 @@ if response.strip("") != " ":
                 continue
             with st.status(f"**{step[0].tool}**: {step[0].tool_input}", state="complete"):
                 st.write(step[1])
-        st.write(msg.content)
     if prompt := st.chat_input(placeholder="Ask a question about your document"):
         st.chat_message("user").write(prompt)
         llm = ChatGoogleGenerativeAI(
