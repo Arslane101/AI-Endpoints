@@ -243,6 +243,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                 analysis = eval(ai_model)(response,prompt)
                 with st.chat_message("assistant"):
                     response = analysis
+                st.session_state.messages.append({"role": "assistant", "content": response})
                 memory.save_context({"input": response}, {"output": analysis})
                 st.markdown("### PRD Analysis")           
                 scores = score_prd(analysis)
@@ -267,7 +268,10 @@ for idx, msg in enumerate(msgs.messages):
             with st.status(f"**{step[0].tool}**: {step[0].tool_input}", state="complete"):
                 st.write(step[0].log)
                 st.write(step[1])
-if prompt := st.chat_input(placeholder="Ask a question about your document"):
+        st.write(msg.content)
+    if msg.type == "ai":
+        st.session_state.steps[str(idx)] = []
+    if prompt := st.chat_input(placeholder="Ask a question about your document"):
         st.chat_message("user").write(prompt)
         llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-001",
