@@ -269,7 +269,7 @@ for idx, msg in enumerate(msgs.messages):
                 st.write(step[0].log)
                 st.write(step[1])
         st.write(msg.content)
-    if prompt := st.chat_input(placeholder="Ask a question about your document"):
+if prompt := st.chat_input(placeholder="Ask a question about your document"):
         st.chat_message("user").write(prompt)
         llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-001",
