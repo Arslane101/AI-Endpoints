@@ -11,7 +11,6 @@ from deepgram import DeepgramClient, FileSource, PrerecordedOptions
 from together import Together
 from page2 import library,prompts
 from langchain_community.callbacks import StreamlitCallbackHandler
-from langchain_openai import ChatOpenAI 
 from langchain.agents import ConversationalChatAgent, AgentExecutor
 from langchain.memory import ConversationBufferMemory
 from langchain_community.callbacks import StreamlitCallbackHandler
