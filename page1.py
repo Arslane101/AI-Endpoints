@@ -245,6 +245,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                     response = analysis
                 st.markdown(response)
                 memory.save_context({"input": response}, {"output": analysis})
+                st.session_state.messages.append({"role": "assistant", "content": analysis})
                 st.markdown("### PRD Analysis")           
                 scores = score_prd(analysis)
                 col1, col2 = st.columns([3, 1])
@@ -267,6 +268,7 @@ if response.strip("") != " ":
             if step[0].tool == "_Exception":
                 continue
             with st.status(f"**{step[0].tool}**: {step[0].tool_input}", state="complete"):
+                st.write(step[0].log)
                 st.write(step[1])
     if prompt := st.chat_input(placeholder="Ask a question about your document"):
         st.chat_message("user").write(prompt)
