@@ -244,7 +244,6 @@ if response.strip() != " ":  # Only show if there's a transcript
                 with st.chat_message("assistant"):
                     response = analysis
                 st.markdown(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
                 msgs.add_ai_message(analysis)
                 st.session_state.messages.append({"role": "assistant", "content": analysis})
                 st.markdown("### PRD Analysis")           
@@ -269,7 +268,6 @@ if response.strip("") != " ":
             if step[0].tool == "_Exception":
                 continue
             with st.status(f"**{step[0].tool}**: {step[0].tool_input}", state="complete"):
-                st.write(step[0].log)
                 st.write(step[1])
         st.write(msg.content)
     if prompt := st.chat_input(placeholder="Ask a question about your document"):
