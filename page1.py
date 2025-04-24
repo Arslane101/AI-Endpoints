@@ -180,15 +180,13 @@ def TogetherAI(transcript,prompt):
 st.title("PRD Generation")
 
 
-if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
-    msgs.clear()
-    msgs.add_ai_message("How can I help you?")
-    st.session_state.steps = {}
+
 
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
+if st.sidebar.button("Reset chat history"):
+    st.session_state.messages = []
 
 # Accept user input
 toggle = st.toggle(label="📁")
