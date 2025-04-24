@@ -26,3 +26,6 @@ pytz==2025.1
 streamlit==1.43.0
 together
 st_pages
+langchain
+requests
+langchain-community

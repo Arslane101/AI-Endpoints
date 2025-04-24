@@ -10,7 +10,10 @@ from openai import OpenAI
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
 from together import Together
 from page2 import library,prompts
-
+from langchain_community.chat_models import ChatOpenAI
+from langchain.callbacks import StreamlitCallbackHandler
+from langchain.chat_models import ChatOpenAI
+from langchain.tools import DuckDuckGoSearchRun
 @st.cache_data
 def score_prd(prd_text):
     """Score PRD based on key metrics with simplified scoring."""
@@ -157,14 +160,14 @@ def Groq(uploaded_file):
         
 
 @st.cache_data
-def process_with_gemini(transcript,prompt):
+def Gemini(transcript,prompt):
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('models/gemini-1.5-flash')
     response = model.generate_content(prompt["content"].format(transcript=transcript))
     return response.text
 
 @st.cache_data
-def process_with_together(transcript,prompt):
+def TogetherAI(transcript,prompt):
     client = Together(api_key=st.secrets["TG_API_TOKEN"])
     response = client.chat.completions.create(
     model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
@@ -183,7 +186,7 @@ if "messages" not in st.session_state:
 toggle = st.toggle(label="📁")
 response = " "
 if toggle:
-    uploaded_file = st.file_uploader("Insert Recording", type="webm")
+    uploaded_file = st.file_uploader("Insert Recording", type=["webm","mp3"])
 else: 
     uploaded_file = st.text_input("Insert Link",placeholder="eg: https://www.example.com/recording.webm",value=None)
 model = st.selectbox("Select the service to use for transcription", ["Assembly", "Deepgram", "Gladia","Groq","Whisper"],
@@ -225,8 +228,8 @@ if response.strip() != " ":  # Only show if there's a transcript
             prompt = library.get_prompt(selected_prompt)
     else:
         st.info("No prompts available in library")
-    if ai_model == "Gemini" and prompts:
-                analysis = process_with_gemini(response,prompt)
+    if ai_model is not None and prompts:
+                analysis = eval(ai_model)(response,prompt)
                 with st.chat_message("assistant"):
                     response = analysis
                 st.markdown(response)
@@ -237,30 +240,22 @@ if response.strip() != " ":  # Only show if there's a transcript
                     st.markdown("### Quality Metrics")
                 with col2:
                     st.metric("Total", f"{scores['Total Score']}")
-                
                 # Create three columns for metrics display
                 cols = st.columns(3)
                 metrics = list(scores.items())[:-1]  # Exclude Total Score
                 for i, (metric, score) in enumerate(metrics):
                     with cols[i % 3]:
                         st.metric(metric, f"{score}/10", label_visibility="visible")
-    elif ai_model == "TogetherAI" and prompts:
-                analysis = process_with_together(response,prompt)
-                with st.chat_message("assistant"):
-                    response = analysis
-                st.markdown(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                scores = score_prd(analysis)
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown("### Quality Metrics")
-                with col2:
-                    st.metric("Total", f"{scores['Total Score']}")
-                
-                # Create three columns for metrics display
-                cols = st.columns(3)
-                metrics = list(scores.items())[:-1]  # Exclude Total Score
-                for i, (metric, score) in enumerate(metrics):
-                    with cols[i % 3]:
-                        st.metric(metric, f"{score}/10", label_visibility="visible")
+question = st.chat_input("Ask a question about the PRD:")
+if question:
+    st.session_state.messages.append({"role": "user", "content": question})
+    st.chat_message("user").write(prompt)
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=st.secrets["OPENAI_API_KEY"], streaming=True)
+    search = DuckDuckGoSearchRun(name="Search")
+    search_agent = initialize_agent([search], llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, handle_parsing_errors=True)
+    with st.chat_message("assistant"):
+        st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
+        response = search_agent.run(st.session_state.messages, callbacks=[st_cb])
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.write(response)     
     
