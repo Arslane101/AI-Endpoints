@@ -263,7 +263,10 @@ if prompt := st.chat_input("What is up?"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
         stream = model.generate_content(
-            content = m["content"],
+            content = [
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
             stream=True,
         )
         response = st.write_stream(stream)
