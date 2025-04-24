@@ -179,10 +179,7 @@ def TogetherAI(transcript,prompt):
 
 st.title("PRD Generation")
 
-msgs = StreamlitChatMessageHistory()
-memory = ConversationBufferMemory(
-    chat_memory=msgs, return_messages=True, memory_key="chat_history", output_key="output"
-)
+
 if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
     msgs.clear()
     msgs.add_ai_message("How can I help you?")
@@ -244,7 +241,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                 with st.chat_message("assistant"):
                     response = analysis
                 st.markdown(response)
-                memory.save_context({"input": response}, {"output": analysis})
+                st.session_state.messages.append({"role": "assistant", "content": analysis})
                 st.markdown("### PRD Analysis")           
                 scores = score_prd(analysis)
                 col1, col2 = st.columns([3, 1])
@@ -258,40 +255,21 @@ if response.strip() != " ":  # Only show if there's a transcript
                 for i, (metric, score) in enumerate(metrics):
                     with cols[i % 3]:
                         st.metric(metric, f"{score}/10", label_visibility="visible")
-avatars = {"human": "user", "ai": "assistant"}
-for idx, msg in enumerate(msgs.messages):
-    with st.chat_message(avatars[msg.type]):
-        # Render intermediate steps if any were saved
-        for step in st.session_state.steps.get(str(idx), []):
-            if step[0].tool == "_Exception":
-                continue
-            with st.status(f"**{step[0].tool}**: {step[0].tool_input}", state="complete"):
-                st.write(step[0].log)
-                st.write(step[1])
-        st.write(msg.content)
-if prompt := st.chat_input(placeholder="Ask a question about your document"):
-        st.chat_message("user").write(prompt)
-        llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-001",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-        api_key=st.secrets["GEMINI_API_KEY"])
-        tools = [DuckDuckGoSearchRun(name="Search")]
-        chat_agent = ConversationalChatAgent.from_llm_and_tools(llm=llm, tools=tools)
-        executor = AgentExecutor.from_agent_and_tools(
-            agent=chat_agent,
-            tools=tools,
-            memory=memory,
-            return_intermediate_steps=True,
-            handle_parsing_errors=True,
+if prompt := st.chat_input("What is up?"):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Display user message in chat message container
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model = genai.GenerativeModel('models/gemini-1.5-flash')
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    with st.chat_message("assistant"):
+        stream = model.generate_content(
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
+            stream=True,
         )
-        with st.chat_message("assistant"):
-            st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-            cfg = RunnableConfig()
-            cfg["callbacks"] = [st_cb]
-            response = executor.invoke(prompt, cfg)
-            st.write(response["output"])
-            st.session_state.steps[str(len(msgs.messages) - 1)] = response["intermediate_steps"]
-        
+        response = st.write_stream(stream)
+    st.session_state.messages.append({"role": "assistant", "content": response})
