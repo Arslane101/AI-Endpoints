@@ -243,9 +243,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                 analysis = eval(ai_model)(response,prompt)
                 with st.chat_message("assistant"):
                     response = analysis
-                st.markdown(response)
                 memory.save_context({"input": response}, {"output": analysis})
-                st.session_state.messages.append({"role": "assistant", "content": analysis})
                 st.markdown("### PRD Analysis")           
                 scores = score_prd(analysis)
                 col1, col2 = st.columns([3, 1])
@@ -259,10 +257,9 @@ if response.strip() != " ":  # Only show if there's a transcript
                 for i, (metric, score) in enumerate(metrics):
                     with cols[i % 3]:
                         st.metric(metric, f"{score}/10", label_visibility="visible")
-if response.strip("") != " ":
-    avatars = {"human": "user", "ai": "assistant"}
-    for idx, msg in enumerate(msgs.messages):
-     with st.chat_message(avatars[msg.type]):
+avatars = {"human": "user", "ai": "assistant"}
+for idx, msg in enumerate(msgs.messages):
+    with st.chat_message(avatars[msg.type]):
         # Render intermediate steps if any were saved
         for step in st.session_state.steps.get(str(idx), []):
             if step[0].tool == "_Exception":
@@ -270,7 +267,7 @@ if response.strip("") != " ":
             with st.status(f"**{step[0].tool}**: {step[0].tool_input}", state="complete"):
                 st.write(step[0].log)
                 st.write(step[1])
-    if prompt := st.chat_input(placeholder="Ask a question about your document"):
+if prompt := st.chat_input(placeholder="Ask a question about your document"):
         st.chat_message("user").write(prompt)
         llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-001",
