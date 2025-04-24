@@ -257,12 +257,12 @@ if prompt := st.chat_input("What is up?"):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
     # Display user message in chat message container
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('models/gemini-1.5-flash')
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
     with st.chat_message("user"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
-        stream = model.generate_content(
+        stream = client.models.generate_content(
+            model="gemini-2.0-flash",
             contents = [
                 m["content"]
                 for m in st.session_state.messages
