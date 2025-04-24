@@ -243,7 +243,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                 analysis = eval(ai_model)(response,prompt)
                 with st.chat_message("assistant"):
                     response = analysis
-                st.session_state.messages.append({"role": "assistant", "content": response})
+                st.markdown(response)
                 memory.save_context({"input": response}, {"output": analysis})
                 st.markdown("### PRD Analysis")           
                 scores = score_prd(analysis)
