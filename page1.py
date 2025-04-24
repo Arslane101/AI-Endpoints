@@ -264,7 +264,7 @@ if prompt := st.chat_input("What is up?"):
     with st.chat_message("assistant"):
         stream = model.generate_content(
             contents = [
-                {"role": m["role"], "content": m["content"]}
+                m["content"]
                 for m in st.session_state.messages
             ],
             stream=True,
