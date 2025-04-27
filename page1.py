@@ -248,7 +248,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                     response = analysis
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": analysis})
-                with st.message("assistant"):
+                with st.chat_message("assistant"):
                     second_response = ScoringGemini(analysis)
                 st.session_state.messages.append({"role": "user", "content": analysis})
                 st.markdown("### PRD Analysis")           
