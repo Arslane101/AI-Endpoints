@@ -177,6 +177,13 @@ def TogetherAI(transcript,prompt):
     )
     return response.choices[0].message.content
 
+@st.cache_data
+def ScoringGemini(transcript):
+    prompt = library.get_prompt("Scoring")
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model = genai.GenerativeModel('models/gemini-1.5-flash')
+    response = model.generate_content(prompt["content"].format(transcript=transcript))
+    return response.text
 st.title("PRD Generation")
 
 
@@ -241,8 +248,11 @@ if response.strip() != " ":  # Only show if there's a transcript
                     response = analysis
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": analysis})
+                with st.message("assistant"):
+                    second_response = ScoringGemini(analysis)
+                st.session_state.messages.append({"role": "user", "content": analysis})
                 st.markdown("### PRD Analysis")           
-                scores = score_prd(analysis)
+                """scores = score_prd(analysis)
                 col1, col2 = st.columns([3, 1])
                 with col1:
                     st.markdown("### Quality Metrics")
@@ -253,7 +263,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                 metrics = list(scores.items())[:-1]  # Exclude Total Score
                 for i, (metric, score) in enumerate(metrics):
                     with cols[i % 3]:
-                        st.metric(metric, f"{score}/10", label_visibility="visible")
+                        st.metric(metric, f"{score}/10", label_visibility="visible")"""
                 
 if prompt := st.chat_input("What is up?"):
     # Add user message to chat history
