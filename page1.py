@@ -10,14 +10,7 @@ from openai import OpenAI
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
 from together import Together
 from page2 import library,prompts
-from langchain_community.callbacks import StreamlitCallbackHandler
-from langchain.agents import ConversationalChatAgent, AgentExecutor
-from langchain.memory import ConversationBufferMemory
-from langchain_community.callbacks import StreamlitCallbackHandler
-from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_core.runnables import RunnableConfig
-from langchain_google_genai import ChatGoogleGenerativeAI
+
 @st.cache_data
 def score_prd(prd_text):
     """Score PRD based on key metrics with simplified scoring."""
@@ -248,23 +241,11 @@ if response.strip() != " ":  # Only show if there's a transcript
                     response = analysis
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": analysis})
+                st.markdown("### PRD Analysis")          
                 with st.chat_message("assistant"):
                     second_response = ScoringGemini(analysis)
-                st.session_state.messages.append({"role": "user", "content": analysis})
-                st.markdown("### PRD Analysis")           
-                """scores = score_prd(analysis)
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown("### Quality Metrics")
-                with col2:
-                    st.metric("Total", f"{scores['Total Score']}")
-                # Create three columns for metrics display
-                cols = st.columns(3)
-                metrics = list(scores.items())[:-1]  # Exclude Total Score
-                for i, (metric, score) in enumerate(metrics):
-                    with cols[i % 3]:
-                        st.metric(metric, f"{score}/10", label_visibility="visible")"""
-                
+                st.session_state.messages.append({"role": "assistant", "content": second_response}) 
+          
 if prompt := st.chat_input("What is up?"):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
