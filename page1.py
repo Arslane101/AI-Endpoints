@@ -245,7 +245,7 @@ if response.strip() != " ":  # Only show if there's a transcript
                 with st.chat_message("assistant"):
                     second_response = ScoringGemini(analysis)
                 st.session_state.messages.append({"role": "assistant", "content": second_response}) 
-          
+                st.markdown(second_response)
 if prompt := st.chat_input("What is up?"):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
