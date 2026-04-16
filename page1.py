@@ -243,7 +243,7 @@ model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 toggle = st.toggle(label="📁")
 response = " "
 if toggle:
-    uploaded_file = st.file_uploader("Insert Recording", type=["webm", "mp3", "mp4"])
+    uploaded_file = st.file_uploader("Insert Recording", type=["webm", "mp3", "mp4","m4a"])
 else:
     uploaded_file = st.text_input(
         "Insert Link",
