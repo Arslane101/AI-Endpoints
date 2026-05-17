@@ -165,8 +165,11 @@ def Assembly(uploaded_file):
         uploaded_file = BytesIO(requests.get(uploaded_file).content)
         uploaded_file.name = "audio.webm"
     audio_file = uploaded_file
-    config = aai.TranscriptionConfig(language_detection=True)
-    transcript = transcriber.transcribe(audio_file, config)
+    config = aai.TranscriptionConfig(
+        language_detection=True,
+        speech_models=["universal-3-pro","universal-2"])
+    transcript = transcriber.transcribe(audio_file, config=config
+                                        )
     if transcript.status == aai.TranscriptStatus.error:
         print(f"Transcription failed: {transcript.error}")
         exit(1)

@@ -59,7 +59,7 @@ GROQ = "your-groq-key"
 
 1. Start the Streamlit application:
 ```bash
-streamlit run OpenAiWisper.py
+streamlit run main.py
 ```
 
 2. Access the web interface through your browser (typically at http://localhost:8501)
